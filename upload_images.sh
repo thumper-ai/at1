@@ -1,0 +1,1 @@
+s5cmd cp /home/ray/train_data s3://

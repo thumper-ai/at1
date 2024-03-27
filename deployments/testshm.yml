@@ -1,0 +1,159 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  creationTimestamp: "2023-12-04T11:24:39Z"
+  generation: 1
+  labels:
+    akash.network: "true"
+    akash.network/manifest-service: ray-head
+    akash.network/namespace: **********************
+  name: ray-head
+  namespace: **********************
+  resourceVersion: "6847813"
+  uid: d3161480-63b3-4201-b028-3d55472d4e1c
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      akash.network: "true"
+      akash.network/manifest-service: ray-head
+      akash.network/namespace: **********************
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        akash.network: "true"
+        akash.network/manifest-service: ray-head
+        akash.network/namespace: **********************
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - env:
+        - name: R2_BUCKET_URL
+          value: https://BUCKET_URL
+        - name: S3_ENDPOINT_URL
+          value: https:/BUCKET_URL
+        - name: AWS_ACCESS_KEY_ID
+          value: **********************
+        - name: AWS_SECRET_ACCESS_KEY
+          value: **********************
+        - name: B2_APPLICATION_KEY_ID
+          value: **********************
+        - name: B2_APPLICATION_KEY
+          value: **********************
+        - name: MINIO_ACCESS_KEY
+          value: ************
+        - name: MINIO_SECRET_KEY
+          value: **********************
+        - name: AWS_DEFAULT_REGION
+          value: auto
+        - name: WANDB_API_KEY
+          value: **********************
+        - name: WANDB_ENTITY
+          value: USER_NAME
+        - name: WANDB_PROJECT
+          value: WAND_PROJECT
+        - name: RAY_MULTIPLE_DEPLOYMENT
+          value: "FALSE"
+        - name: OPENBLAS_NUM_THREADS
+          value: "1"
+        - name: NCCL_IB_GID_INDEX
+          value: "3"
+        - name: NCCL_BLOCKING_WAIT
+          value: "0"
+        - name: NCCL_DEBUG
+          value: INFO
+        - name: TORCH_DISTRIBUTED_DETAIL
+          value: DEBUG
+        - name: AKASH_GROUP_SEQUENCE
+          value: "1"
+        - name: AKASH_DEPLOYMENT_SEQUENCE
+          value: "***************"
+        - name: AKASH_ORDER_SEQUENCE
+          value: "1"
+        - name: AKASH_OWNER
+          value: akash*************************************
+        - name: AKASH_PROVIDER
+          value: akash***************************************
+        - name: AKASH_CLUSTER_PUBLIC_HOSTNAME
+          value: provider.************.com
+        image: thumperai/at1:v0.0.68
+        imagePullPolicy: IfNotPresent
+        name: ray-head
+        ports:
+        - containerPort: 6380
+          protocol: TCP
+        - containerPort: 8265
+          protocol: TCP
+        - containerPort: 6380
+          protocol: TCP
+        - containerPort: 8078
+          protocol: TCP
+        - containerPort: 8079
+          protocol: TCP
+        - containerPort: 8265
+          protocol: TCP
+        - containerPort: 10002
+          protocol: TCP
+        - containerPort: 10003
+          protocol: TCP
+        - containerPort: 10004
+          protocol: TCP
+        - containerPort: 10005
+          protocol: TCP
+        volumeMounts:
+          - name: dshm
+            mountPath: /dev/shm
+      volumes:
+        - name: dshm
+          emptyDir:
+            medium: Memory
+        resources:
+          limits:
+            cpu: "160"
+            ephemeral-storage: 2684354560k
+            memory: "326417514496"
+          requests:
+            cpu: "160"
+            ephemeral-storage: 2684354560k
+            memory: "326417514496"
+        securityContext:
+          allowPrivilegeEscalation: false
+          privileged: false
+          runAsNonRoot: false
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        runAsNonRoot: false
+      terminationGracePeriodSeconds: 30
+status:
+  availableReplicas: 1
+  conditions:
+  - lastTransitionTime: "2023-12-04T11:24:41Z"
+    lastUpdateTime: "2023-12-04T11:24:41Z"
+    message: Deployment has minimum availability.
+    reason: MinimumReplicasAvailable
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2023-12-04T11:24:39Z"
+    lastUpdateTime: "2023-12-04T11:24:41Z"
+    message: ReplicaSet "ray-head-58cc6df49" has successfully progressed.
+    reason: NewReplicaSetAvailable
+    status: "True"
+    type: Progressing
+  observedGeneration: 1
+  readyReplicas: 1
+  replicas: 1
+  updatedReplicas: 1

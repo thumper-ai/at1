@@ -1,0 +1,185 @@
+version: '2.0'
+# endpoints:
+#  myendpoint:
+#    kind: ip
+services:
+  ray-head:
+      image:  thumperai/at1:v0.0.61
+      expose:
+        # - port: 10001
+        #   as: 10001
+        #   to:
+        #     - global: true
+
+        - port: 8265
+          as: 8265
+          to: 
+            - service: ray-worker
+            - global: true
+              # service: ray-worker
+              # ip: myendpoint
+        - port: 6380
+          as: 6380
+          to:
+            - service: ray-worker
+            - global: true
+
+        - port: 8078
+          as: 8078
+          to:
+          - service: ray-worker
+        - port: 8079
+          as: 8079
+          to:
+          - service: ray-worker
+        - port: 10002
+          as: 10002
+          to:
+          - service: ray-worker
+        - port: 10003
+          as: 10003
+          to:
+          - service: ray-worker
+        - port: 10004
+          as: 10004
+          to:
+          - service: ray-worker
+        - port: 10005
+          as: 10005
+          to:
+          - service: ray-worker
+
+      # cmd:
+      #       - "ray start --head --port=6380 --dashboard-port=8265 --num-cpus=$MY_CPU_REQUEST --dashboard-host=0.0.0.0 --object-manager-port=8076 --node-manager-port=8077 --dashboard-agent-grpc-port=8078 --dashboard-agent-listen-port=8079 --min-worker-port=10002 --max-worker-port=10005 --redis-password='' --block"
+      env:
+        -  R2_BUCKET_URL=ENTERURLHERE
+        - R2_ACCESS_KEY_ID=****************
+        - R2_SECRET_ACCESS_KEY=*********************
+        - S3_ENDPOINT_URL=ENTER_URL_HERE
+        - AWS_ACCESS_KEY_ID=*****************
+        - AWS_SECRET_ACCESS_KEY=************
+        - B2_APPLICATION_KEY_ID=***************
+        - B2_APPLICATION_KEY=*****************
+
+        # - R2_BUCKET_URL=https://ENTERURLHERE/
+        # - R2_ACCESS_KEY_ID=************
+        # - R2_SECRET_ACCESS_KEY=*********
+        # - S3_ENDPOINT_URL=MY_URL/
+
+        # - S3_ENDPOINT_URL=MY_URL/
+        - MINIO_ACCESS_KEY=****************
+        - MINIO_SECRET_KEY=****************************
+        # - AWS_DEFAULT_REGION=auto
+        # - AWS_ACCESS_KEY_ID=************
+        # - AWS_SECRET_ACCESS_KEY=*********
+        - WANDB_API_KEY=*****************
+        - WANDB_ENTITY=ENTER_USERNAME
+        - WANDB_PROJECT=ENTER_PROJECT_ID
+        # - WANDB_API_KEY=mykey
+        # - WANDB_ENTITY=myusername
+        # - WANDB_PROJECT=myproject
+  ray-worker:
+    image:  thumperai/rayakash:nighly-gpu-worker-22
+    expose:
+      # - port: 8265
+      #   as: 8265
+      #   to:
+      #     - global: true
+      # - port: 6380
+      #   as: 6380
+      #   to:
+      #     - global: true
+      - port: 8078
+        as: 8078
+        to:
+          - global: true
+      - port: 8079
+        as: 8079
+        to:
+          - global: true
+    # cmd: 
+    #       - 'python startworker.py'
+    #      - '"ray", "start", "--address=ray-head:6380", "--object-manager-port=8076". "--node-manager-port=8077", "--dashboard-agent-grpc-port=8078", "--dashboard-agent-listen-port=8079", "--min-worker-port=10002" "--max-worker-port=10005", "--block"'
+    env:
+        - RAY_ADDRESS_HOST=ray-head
+        -  R2_BUCKET_URL=ENTERURLHERE
+        - R2_ACCESS_KEY_ID=****************
+        - R2_SECRET_ACCESS_KEY=*********************
+        - S3_ENDPOINT_URL=ENTER_URL_HERE
+        - AWS_ACCESS_KEY_ID=*****************
+        - AWS_SECRET_ACCESS_KEY=************
+        - B2_APPLICATION_KEY_ID=***************
+        - B2_APPLICATION_KEY=*****************
+
+        # - R2_BUCKET_URL=https://ENTERURLHERE/
+        # - R2_ACCESS_KEY_ID=************
+        # - R2_SECRET_ACCESS_KEY=*********
+        # - S3_ENDPOINT_URL=MY_URL/
+
+        # - S3_ENDPOINT_URL=MY_URL/
+        - MINIO_ACCESS_KEY=****************
+        - MINIO_SECRET_KEY=****************************
+        # - AWS_DEFAULT_REGION=auto
+        # - AWS_ACCESS_KEY_ID=************
+        # - AWS_SECRET_ACCESS_KEY=*********
+        - WANDB_API_KEY=*****************
+        - WANDB_ENTITY=ENTER_USERNAME
+        - WANDB_PROJECT=ENTER_PROJECT_ID
+
+profiles:
+  compute:
+    ray-head:
+      resources:
+        cpu:
+          units: 160
+        memory:
+          size: 304Gi
+        gpu:
+          units: 2
+          attributes:
+            vendor:
+              nvidia:
+        #         - model: a100
+        storage:
+          - size: 2500Gi
+
+    ray-worker:
+      resources:
+        cpu:
+          units: 20
+        memory:
+          size: 124Gi
+        gpu:
+          units: 2
+          attributes:
+            vendor:
+              nvidia:
+                # - model: a40
+                # - model: a10
+                # - model: h100
+                # - model: a100
+        storage:
+          # - size: 6000Gi
+          - size: 1200gi
+          # - size: 1200Gi
+
+
+  placement:
+    westcoast:
+      pricing:
+        ray-head:
+          denom: uakt
+          amount: 100000000
+        ray-worker:
+          denom: uakt
+          amount: 100000000
+          
+deployment:
+  ray-head:
+    westcoast:
+      profile: ray-head
+      count: 1
+  ray-worker:
+    westcoast:
+      profile: ray-worker
+      count: 14

@@ -1,0 +1,81 @@
+version: '2.0'
+services:
+  ray-head:
+      image:  thumperai/rayakash:nighly-gpu-16
+      expose:
+        - port: 8265
+          as: 8265
+          to:
+            - global: true
+              service: ray-worker
+              # ip: myendpoint
+        - port: 6380
+          as: 6380
+          to:
+            - service: ray-worker
+            - global: true
+
+        - port: 8078
+          as: 8078
+          to:
+          - service: ray-worker
+        - port: 8079
+          as: 8079
+          to:
+          - service: ray-worker
+        - port: 10002
+          as: 10002
+          to:
+          - service: ray-worker
+        - port: 10003
+          as: 10003
+          to:
+          - service: ray-worker
+        - port: 10004
+          as: 10004
+          to:
+          - service: ray-worker
+        - port: 10005
+          as: 10005
+          to:
+          - service: ray-worker
+      env:
+        - bucket=BUCKETURL
+  
+profiles:
+  compute:
+    ray-head:
+      resources:
+        cpu:
+          units: 8
+        memory:
+          size: 600Gi 
+          # works size: 600Gi 
+
+        gpu:
+          # units: 1
+          # attributes:
+          #   vendor:
+          #     nvidia:
+          #       - model: a100
+        storage:
+          - size: 100Gi
+
+  placement:
+    eastcoast:
+      pricing:
+        ray-head:
+          denom: uakt
+          amount: 100000000
+       
+          
+deployment:
+  ray-head:
+    eastcoast:
+      profile: ray-head
+      count: 1
+
+
+# An error has occured. Query failed with (6): rpc error: code = Unknown desc = error: invalid unit memory (549755813888 > 644245094400 > 1048576 fails) With gas wanted: '0' and gas used: '26412' : unknown request
+
+# An error has occured. Query failed with (6): rpc error: code = Unknown desc = invalid total CPU (512000 > 584000 > 0 fails) With gas wanted: '0' and gas used: '26412' : unknown request

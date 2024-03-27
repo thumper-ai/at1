@@ -1,0 +1,226 @@
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: tenant-631662-thmpdev
+  name: service-ray-cluster
+  labels:
+    app: ray-cluster
+spec:
+  ports:
+  - name: dashboard
+    protocol: TCP
+    port: 8265
+    targetPort: 8265
+  - name: gcs-server
+    protocol: TCP
+    port: 6380
+    targetPort: 6380
+  - name: ray-api
+    port: 10001
+    protocol: TCP
+    targetPort: 10001
+  - name: dashboard-agent-grpc-port
+    port: 8078
+    protocol: TCP
+    targetPort: 8078
+  - name: dashboard-agent-listen-port
+    port: 8079
+    targetPort: 8079
+    protocol: TCP
+    
+  selector:
+    app: ray-cluster
+    component: ray-head
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: tenant-631662-thmpdev
+  name: deployment-ray-head
+  labels:
+    app: ray-cluster
+    ray-node: head
+spec:
+  # Do not change this - Ray currently only supports one head node per cluster.
+  replicas: 1
+  selector:
+    matchLabels:
+      component: ray-head
+      type: ray
+      app: ray-cluster
+  template:
+    metadata:
+      labels:
+        component: ray-head
+        type: ray
+        app: ray-cluster
+    spec:
+      # If the head node goes down, the entire cluster (including all worker
+      # nodes) will go down as well. If you want Kubernetes to bring up a new
+      # head node in this case, set this to "Always," else set it to "Never."
+      restartPolicy: Always
+      # This volume allocates shared memory for Ray to use for its plasma
+      # object store. If you do not provide this, Ray will fall back to
+      # /tmp which cause slowdowns if is not a shared memory volume.
+      volumes:
+      - name: dshm
+        emptyDir:s
+          medium: Memory
+      containers:
+        - name: ray-head
+          # image: rayproject/ray-ml:nightly-gpu
+          image: rayproject/ray-ml:9670b3-py310-gpu
+          # image: tcr.tenant-631662-thmpdev.las1.ingress.coreweave.cloud/diffusers_ray:2
+          # image:  rayproject/ray-ml:303496-py310-gpu
+          # image: tcr.tenant-631662-thmpdev.las1.ingress.coreweave.cloud/loratrainer-ray:2
+          imagePullPolicy: IfNotPresent
+          command: [ "/bin/bash", "-c", "--"]
+          args:
+            - "ray start --head --port=6380 --dashboard-port=8265 --num-cpus=$MY_CPU_REQUEST --dashboard-host=0.0.0.0 --object-manager-port=8076 --node-manager-port=8077 --dashboard-agent-grpc-port=8078 --dashboard-agent-listen-port=8079 --min-worker-port=10002 --max-worker-port=10017 --redis-password='' --block"
+          # This volume allocates shared memory for Ray to use for its plasma
+          # object store. If you do not provide this, Ray will fall back to
+          # /tmp which cause slowdowns if is not a shared memory volume.
+          volumeMounts:
+            - mountPath: /dev/shm
+              name: dshmss
+          env:
+            # This is used in the ray start command so that Ray can spawn the
+            # correct number of processes. Omitting this may lead to degraded
+            # performance.
+            - name: RAY_RUNTIME_ENV_LOG_TO_DRIVER_ENABLED
+              value: "1"
+            - name: MY_CPU_REQUEST
+            
+              # valueFrom:
+              #   resourceFieldRef:
+              #     resource: requests.cpu
+              value: "0"
+            - name: HUGGING_FACE_HUB_TOKEN
+              value: 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
+            - name: TEST_TOKEN
+              value: YoyBRpRGJBejUIwxfJY
+            # - name: HUGGING_FACE_HUB_TOKEN
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: huggingface-hub-token
+            #       key: token
+
+            - name: AWS_ACCESS_KEY_ID
+              value: minio9880707009008
+            - name: AWS_SECRET_ACCESS_KEY
+              value: minio1236585895980
+            - name: S3_ENDPOINT_URL
+              value: http://provider.europlots.com:31797
+
+            - name: PGDATABASE
+              value: neondb
+            - name: PGHOST
+              value: ep-sparkling-sound-118577.us-west-2.aws.neon.tech
+            - name: PGUSER
+              value: logan
+            - name: PGPASSWORD
+              value: GEMqDoeJ5Wz0  
+            - name: DATABASE_URL
+              value: postgresql://logan:GEMqDoeJ5Wz0@ep-sparkling-sound-118577.us-west-2.aws.neon.tech/neondb
+
+          resources:
+            requests:
+              cpu: 8
+              memory: 64Gi
+            limits:
+              cpu: 8
+              memory: 64Gi
+              nvidia.com/gpu: 1
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: tenant-631662-thmpdev
+  name: deployment-ray-worker
+  labels:
+    app: ray-cluster
+spec:
+  # Change this to scale the number of worker nodes started in the Ray cluster.
+  replicas: 1
+  selector:
+    matchLabels:
+      component: ray-worker
+      type: ray
+      app: ray-cluster
+  template:
+    metadata:
+      labels:
+        component: ray-worker
+        type: ray
+        app: ray-cluster
+    spec:
+      restartPolicy: Always
+      volumes:
+      - name: dshm
+        emptyDir:
+          medium: Memory
+      containers:
+      - name: ray-worker
+        image: rayproject/ray-ml:9670b3-py310-gpu
+        # image: rayproject/ray-ml:nightly-gpu
+        # image: tcr.tenant-631662-thmpdev.las1.ingress.coreweave.cloud/diffusers_ray:3
+        # image: rayproject/ray-ml:303496-py310-gpu
+        # image: tcr.tenant-631662-thmpdev.las1.ingress.coreweave.cloud/loratrainer-ray:2
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/bash", "-c", "--"]
+        args:
+          - "ray start --num-cpus=$MY_CPU_REQUEST --address=service-ray-cluster:6380 --object-manager-port=8076 --node-manager-port=8077 --dashboard-agent-grpc-port=8078 --dashboard-agent-listen-port=8079 --min-worker-port=10002 --max-worker-port=10017 --block"
+        # This volume allocates shared memory for Ray to use for its plasma
+        # object store. If you do not provide this, Ray will fall back to
+        # /tmp which cause slowdowns if is not a shared memory volume.
+        volumeMounts:
+          - mountPath: /dev/shm
+            name: dshm
+        env:
+          # This is used in the ray start command so that Ray can spawn the
+          # correct number of processes. Omitting this may lead to degraded
+          # performance.
+          - name: MY_CPU_REQUEST
+            valueFrom:
+              resourceFieldRef:
+                resource: requests.cpu
+          - name: HUGGING_FACE_HUB_TOKEN
+            value: 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
+          - name: AWS_ACCESS_KEY_ID
+            value: minio9880707009008
+          - name: AWS_SECRET_ACCESS_KEY
+            value: minio1236585895980
+          - name: S3_ENDPOINT_URL
+            value: http://provider.europlots.com:31797
+
+          - name: PGDATABASE
+            value: neondb
+          - name: PGHOST
+            value: ep-sparkling-sound-118577.us-west-2.aws.neon.tech
+          - name: PGUSER
+            value: logan
+          - name: PGPASSWORD
+            value: GEMqDoeJ5Wz0  
+          - name: DATABASE_URL
+            value: postgresql://logan:GEMqDoeJ5Wz0@ep-sparkling-sound-118577.us-west-2.aws.neon.tech/neondb
+
+
+          # - name: HUGGING_FACE_HUB_TOKEN
+          #   valueFrom:
+          #     secretKeyRef:
+          #       name: huggingface-hub-token
+          #       key: token
+        resources:
+          limits:
+            cpu: 32
+            memory: 64Gi
+            nvidia.com/gpu: 1
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: gpu.nvidia.com/class
+                operator: In
+                values:
+                  - Quadro_RTX_4000
