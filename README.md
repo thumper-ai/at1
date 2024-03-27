@@ -29,7 +29,7 @@ While AT1 represents a pioneering effort in the use of decentralized cloud resou
 - To train on akash you will need to deploy ray cluster using the [akash console] (https://console.akash.network) and the deployments under ./Deployments/gpuraycluster.yaml 
 - training job scripts are listed under ./scripts and PixArt-alpa/script
 - scripts should be launched with launch.py, launch.py is a wrapper around ray jobs python api to make it easier to upload src code to the ray cluster or rebuild the ray python environment without having to rebuild the docker container. 
-- final version of the training script with the modified archetechure from at1 inspired by (Alexandru Papiu) [https://github.com/apapiu/transformer_latent_diffusion] ./PixArt-alpha/scripts/train_smallpit8face.py
+- final version of the training script with the modified archetechure from at1 inspired by [Alexandru Papiu](https://github.com/apapiu/transformer_latent_diffusion) ./PixArt-alpha/scripts/train_smallpit8face.py
 
 
 ## Example Notebook
