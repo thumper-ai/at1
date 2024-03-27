@@ -1,7 +1,6 @@
 
 # akash-thumper-v1 (AT1) Model 
 
-
 ## Overview
 
 The `akash-thumper-v1` (AT1) is a creative commons-based text-to-image generation model, marking a significant milestone as the first foundational model trained entirely on the Akash Decentralized Cloud. This model embodies the spirit of open-source and decentralized computing and leverages Creative Commons licensed data for its training. 
@@ -13,7 +12,6 @@ The `akash-thumper-v1` (AT1) is a creative commons-based text-to-image generatio
 - **Training Platform:** [Akash Decentralized Cloud](https://akash.network)
 - **Release License:** Open Rails License
 - **Weights:** [huggingface](https://huggingface.co/thumperai/akash-thumper-v1/)
-
 
 
 ## Performance and Limitations
@@ -31,6 +29,7 @@ While AT1 represents a pioneering effort in the use of decentralized cloud resou
 - To train on akash you will need to deploy ray cluster using the [akash console] (https://console.akash.network) and the deployments under ./Deployments/gpuraycluster.yaml 
 - training job scripts are listed under ./scripts and PixArt-alpa/script
 - scripts should be launched with launch.py, launch.py is a wrapper around ray jobs python api to make it easier to upload src code to the ray cluster or rebuild the ray python environment without having to rebuild the docker container. 
+- final version of the training script with the modified archetechure from at1 inspired by (Alexandru Papiu) [https://github.com/apapiu/transformer_latent_diffusion] ./PixArt-alpha/scripts/train_smallpit8face.py
 
 
 ## Example Notebook
